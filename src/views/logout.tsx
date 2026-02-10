@@ -5,21 +5,21 @@ import View from './view';
 import { User } from '../service/pizzaService';
 
 interface Props {
-  setUser: (user: User | null) => void;
+    setUser: (user: User | null) => void;
 }
 
 export default function Logout(props: Props) {
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
-  React.useEffect(() => {
-    pizzaService.logout();
-    props.setUser(null);
-    navigate('/');
-  }, []);
+    React.useEffect(() => {
+        pizzaService.logout();
+        props.setUser(null);
+        navigate('/');
+    }, []);
 
-  return (
-    <View title='Logout'>
-      <div className='text-neutral-100'>Logging out ...</div>
-    </View>
-  );
+    return (
+        <View title="Logout">
+            <div className="text-neutral-100">Logging out ...</div>
+        </View>
+    );
 }
