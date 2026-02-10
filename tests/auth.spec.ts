@@ -48,3 +48,21 @@ test('purchase with login', async ({ page }) => {
     // Check balance
     await expect(page.getByText('0.008')).toBeVisible();
 });
+
+test('register', async ({ page }) => {
+    await basicInit(page);
+
+    // Register new user
+    await page.getByRole('link', { name: 'Register' }).click();
+    await expect(page.getByText('Welcome to the party')).toBeVisible();
+    await page.getByPlaceholder('Full name').fill('New Name');
+    await page.getByPlaceholder('Email address').fill('newEmail@test.com');
+    await page.getByPlaceholder('Password').fill('newPassword');
+    await page.getByRole('button', { name: 'Register' }).click();
+
+    // Diner Dashboard
+    await page.getByRole('link', { name: 'NN' }).click();
+    await expect(page.getByText('New Name')).toBeVisible();
+    await expect(page.getByText('newEmail@test.com')).toBeVisible();
+    await expect(page.getByText('diner', { exact: true })).toBeVisible();
+});
