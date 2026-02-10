@@ -40,7 +40,7 @@ test('create and close franchise', async ({ page }) => {
     await expect(page.getByRole('cell', { name: 'LotaPizza' })).toBeVisible();
 });
 
-test('create and close store', async ({ page }) => {
+test('create and close store as admin', async ({ page }) => {
     await basicInit(page);
 
     // Login and go to admin page
