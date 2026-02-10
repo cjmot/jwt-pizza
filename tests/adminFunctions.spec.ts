@@ -51,7 +51,7 @@ test('create and close store as admin', async ({ page }) => {
     await page.getByRole('link', { name: 'Admin' }).click();
 
     // Close Spanish Fork store
-    await page.getByRole('row', { name: 'Lehi ₿ Close' }).getByRole('button').click();
+    await page.getByRole('row', { name: 'Lehi 450 ₿ Close' }).getByRole('button').click();
     await expect(page.getByRole('main')).toContainText(
         'Are you sure you want to close the LotaPizza store Lehi ? This cannot be restored. All outstanding revenue will not be refunded.',
     );

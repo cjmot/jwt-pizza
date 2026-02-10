@@ -17,6 +17,13 @@ async function basicInit(page: Page) {
             password: 'a',
             roles: [{ role: Role.Diner }],
         },
+        'f@jwt.com': {
+            id: '4',
+            name: 'Pizza Franchisee',
+            email: 'f@jwt.com',
+            password: 'f',
+            roles: [{ role: Role.Franchisee }],
+        },
         'a@jwt.com': {
             id: '5',
             name: 'Pizza Admin',
@@ -29,20 +36,25 @@ async function basicInit(page: Page) {
     let validFranchises: {
         id: string;
         name: string;
-        stores: { id: string; name: string }[];
+        stores: { id: string; name: string; franchiseId: string; totalRevenue?: number }[];
         admins: User[];
     }[] = [
         {
             id: '2',
             name: 'LotaPizza',
             stores: [
-                { id: '4', name: 'Lehi' },
-                { id: '5', name: 'Springville' },
-                { id: '6', name: 'American Fork' },
+                { id: '4', name: 'Lehi', franchiseId: '2', totalRevenue: 450 },
+                { id: '5', name: 'Springville', franchiseId: '2', totalRevenue: 5 },
+                { id: '6', name: 'American Fork', franchiseId: '2', totalRevenue: 890 },
             ],
+            admins: [{ id: '4', name: 'Pizza Franchisee', email: 'f@jwt.com' }],
+        },
+        {
+            id: '3',
+            name: 'PizzaCorp',
+            stores: [{ id: '7', name: 'Spanish Fork', franchiseId: '3', totalRevenue: 0 }],
             admins: [],
         },
-        { id: '3', name: 'PizzaCorp', stores: [{ id: '7', name: 'Spanish Fork' }], admins: [] },
         { id: '4', name: 'topSpot', stores: [], admins: [] },
     ];
 
@@ -117,14 +129,22 @@ async function basicInit(page: Page) {
         await route.fulfill({ json: newFranchise });
     });
 
-    // Delete a franchise
+    // Delete a franchise or get a user's franchises
     await page.route(/\/api\/franchise\/(\d+)$/, async (route) => {
-        expect(route.request().method()).toBe('DELETE');
         const franchiseId = route.request().url().split('/').pop();
         if (franchiseId) {
-            validFranchises = validFranchises.filter((f) => f.id !== franchiseId);
-            await route.fulfill({ json: { message: 'franchise deleted' } });
-            return;
+            if (route.request().method() === 'DELETE') {
+                validFranchises = validFranchises.filter((f) => f.id !== franchiseId);
+                await route.fulfill({ json: { message: 'franchise deleted' } });
+                return;
+            } else if (route.request().method() === 'GET') {
+                const userId = franchiseId;
+                const franchises = validFranchises.filter((f) =>
+                    f.admins.find((a) => a.id === userId),
+                );
+                await route.fulfill({ json: franchises });
+                return;
+            }
         } else {
             await route.fulfill({ status: 400, json: { error: 'missing franchise id' } });
         }
@@ -174,6 +194,7 @@ async function basicInit(page: Page) {
             await route.fulfill({ json: { message: 'store deleted' } });
             return;
         } else if (route.request().method() === 'POST') {
+            const storeReq = route.request().postDataJSON();
             const franchiseId = route
                 .request()
                 .url()
@@ -182,15 +203,16 @@ async function basicInit(page: Page) {
                 await route.fulfill({ status: 400, json: { error: 'missing franchise id' } });
                 return;
             }
-            const storeReq = route.request().postDataJSON();
-            const newStore = { ...storeReq, id: '12' };
+            const newStore = { name: storeReq.name, id: '12', franchiseId, totalRevenue: 0 };
             const franchise = validFranchises.find((f) => f.id === franchiseId);
             if (!franchise) {
                 await route.fulfill({ status: 404, json: { error: 'franchise not found' } });
                 return;
             }
             franchise.stores.push(newStore);
-            await route.fulfill({ json: newStore });
+            await route.fulfill({
+                json: { id: newStore.id, name: newStore.name, franchiseId },
+            });
         }
     });
 
