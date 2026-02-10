@@ -152,14 +152,12 @@ async function basicInit(page: Page) {
 
     // Delete and Create store
     await page.route(/\/api\/franchise\/(\d+)\/store(\/\d+)?/, async (route) => {
-        console.log('Route: ', route.request().url());
         if (route.request().method() === 'DELETE') {
             const storeId = route.request().url().split('/').pop();
             const franchiseId = route
                 .request()
                 .url()
                 .match(/\/franchise\/(\d+)\/store/)?.[1];
-            console.log(storeId, franchiseId);
             if (!storeId || !franchiseId) {
                 await route.fulfill({
                     status: 400,
@@ -173,7 +171,6 @@ async function basicInit(page: Page) {
                 return;
             }
             franchise.stores = franchise.stores.filter((s) => s.id !== storeId);
-            console.log('ValidFranchises: ', validFranchises);
             await route.fulfill({ json: { message: 'store deleted' } });
             return;
         } else if (route.request().method() === 'POST') {
