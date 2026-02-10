@@ -26,18 +26,24 @@ async function basicInit(page: Page) {
         },
     };
 
-    let validFranchises = [
+    let validFranchises: {
+        id: string;
+        name: string;
+        stores: { id: string; name: string }[];
+        admins: User[];
+    }[] = [
         {
-            id: 2,
+            id: '2',
             name: 'LotaPizza',
             stores: [
-                { id: 4, name: 'Lehi' },
-                { id: 5, name: 'Springville' },
-                { id: 6, name: 'American Fork' },
+                { id: '4', name: 'Lehi' },
+                { id: '5', name: 'Springville' },
+                { id: '6', name: 'American Fork' },
             ],
+            admins: [],
         },
-        { id: 3, name: 'PizzaCorp', stores: [{ id: 7, name: 'Spanish Fork' }] },
-        { id: 4, name: 'topSpot', stores: [] },
+        { id: '3', name: 'PizzaCorp', stores: [{ id: '7', name: 'Spanish Fork' }], admins: [] },
+        { id: '4', name: 'topSpot', stores: [], admins: [] },
     ];
 
     // Authorize login for the given user
@@ -72,14 +78,14 @@ async function basicInit(page: Page) {
     await page.route('*/**/api/order/menu', async (route) => {
         const menuRes = [
             {
-                id: 1,
+                id: '1',
                 title: 'Veggie',
                 image: 'pizza1.png',
                 price: 0.0038,
                 description: 'A garden of delight',
             },
             {
-                id: 2,
+                id: '2',
                 title: 'Pepperoni',
                 image: 'pizza2.png',
                 price: 0.0042,
@@ -98,10 +104,10 @@ async function basicInit(page: Page) {
         expect(franchiseReq.name).toBe('newFranchise');
         const newFranchise = {
             name: franchiseReq.name,
-            id: 8,
+            id: '8',
             admins: [
                 {
-                    name: loggedInUser?.name,
+                    name: loggedInUser?.name || '',
                     email: franchiseReq.admins[0].email,
                     id: loggedInUser?.id,
                 },
@@ -112,11 +118,11 @@ async function basicInit(page: Page) {
     });
 
     // Delete a franchise
-    await page.route(/\/api\/franchise\/(\d)$/, async (route) => {
+    await page.route(/\/api\/franchise\/(\d+)$/, async (route) => {
         expect(route.request().method()).toBe('DELETE');
         const franchiseId = route.request().url().split('/').pop();
         if (franchiseId) {
-            validFranchises = validFranchises.filter((f) => f.id !== parseInt(franchiseId));
+            validFranchises = validFranchises.filter((f) => f.id !== franchiseId);
             await route.fulfill({ json: { message: 'franchise deleted' } });
             return;
         } else {
@@ -142,6 +148,53 @@ async function basicInit(page: Page) {
         };
         expect(route.request().method()).toBe('POST');
         await route.fulfill({ json: orderRes });
+    });
+
+    // Delete and Create store
+    await page.route(/\/api\/franchise\/(\d+)\/store(\/\d+)?/, async (route) => {
+        console.log('Route: ', route.request().url());
+        if (route.request().method() === 'DELETE') {
+            const storeId = route.request().url().split('/').pop();
+            const franchiseId = route
+                .request()
+                .url()
+                .match(/\/franchise\/(\d+)\/store/)?.[1];
+            console.log(storeId, franchiseId);
+            if (!storeId || !franchiseId) {
+                await route.fulfill({
+                    status: 400,
+                    json: { error: 'missing store or franchise id' },
+                });
+                return;
+            }
+            const franchise = validFranchises.find((f) => f.id === franchiseId);
+            if (!franchise) {
+                await route.fulfill({ status: 404, json: { error: 'franchise not found' } });
+                return;
+            }
+            franchise.stores = franchise.stores.filter((s) => s.id !== storeId);
+            console.log('ValidFranchises: ', validFranchises);
+            await route.fulfill({ json: { message: 'store deleted' } });
+            return;
+        } else if (route.request().method() === 'POST') {
+            const franchiseId = route
+                .request()
+                .url()
+                .match(/\/franchise\/(\d+)\/store/)?.[1];
+            if (!franchiseId) {
+                await route.fulfill({ status: 400, json: { error: 'missing franchise id' } });
+                return;
+            }
+            const storeReq = route.request().postDataJSON();
+            const newStore = { ...storeReq, id: '12' };
+            const franchise = validFranchises.find((f) => f.id === franchiseId);
+            if (!franchise) {
+                await route.fulfill({ status: 404, json: { error: 'franchise not found' } });
+                return;
+            }
+            franchise.stores.push(newStore);
+            await route.fulfill({ json: newStore });
+        }
     });
 
     await page.goto('/');

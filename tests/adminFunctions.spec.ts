@@ -51,10 +51,10 @@ test('create and close store', async ({ page }) => {
     await page.getByRole('link', { name: 'Admin' }).click();
 
     // Close Spanish Fork store
-    await page.getByRole('row', { name: 'Spanish Fork ₿ Close' }).getByRole('button').click();
+    await page.getByRole('row', { name: 'Lehi ₿ Close' }).getByRole('button').click();
     await expect(page.getByRole('main')).toContainText(
-        'Are you sure you want to close the PizzaCorp store Spanish Fork ? This cannot be restored. All outstanding revenue will not be refunded.',
+        'Are you sure you want to close the LotaPizza store Lehi ? This cannot be restored. All outstanding revenue will not be refunded.',
     );
     await page.getByRole('button', { name: 'Close' }).click();
-    await expect(page.getByRole('cell', { name: 'Spanish Fork' })).toHaveCount(0);
+    await expect(page.getByRole('cell', { name: 'Lehi' })).toHaveCount(0);
 });
