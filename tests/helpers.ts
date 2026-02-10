@@ -65,19 +65,27 @@ async function basicInit(page: Page) {
             await route.fulfill({ json: { message: 'logged out successfully' } });
             return;
         }
-        const loginReq = route.request().postDataJSON();
-        const user = validUsers[loginReq.email];
-        if (!user || user.password !== loginReq.password) {
-            await route.fulfill({ status: 401, json: { error: 'Unauthorized' } });
+        const req = route.request().postDataJSON();
+        if (route.request().method() === 'PUT') {
+            const user = validUsers[req.email];
+            if (!user || user.password !== req.password) {
+                await route.fulfill({ status: 401, json: { error: 'Unauthorized' } });
+                return;
+            }
+            loggedInUser = validUsers[req.email];
+            const loginRes = {
+                user: loggedInUser,
+                token: 'abcdef',
+            };
+            expect(route.request().method()).toBe('PUT');
+            await route.fulfill({ json: loginRes });
             return;
         }
-        loggedInUser = validUsers[loginReq.email];
-        const loginRes = {
-            user: loggedInUser,
-            token: 'abcdef',
-        };
-        expect(route.request().method()).toBe('PUT');
-        await route.fulfill({ json: loginRes });
+        const newUser = { ...req, id: '15', roles: [{ role: Role.Diner }] };
+        validUsers[req.email] = newUser;
+        delete newUser.password;
+        loggedInUser = newUser;
+        await route.fulfill({ json: { user: newUser, token: 'abcdef' } });
     });
 
     // Return the currently logged in user
@@ -161,13 +169,14 @@ async function basicInit(page: Page) {
 
     // Order a pizza.
     await page.route('*/**/api/order', async (route) => {
-        const orderReq = route.request().postDataJSON();
-        const orderRes = {
-            order: { ...orderReq, id: 23 },
-            jwt: 'eyJpYXQ',
-        };
-        expect(route.request().method()).toBe('POST');
-        await route.fulfill({ json: orderRes });
+        if (route.request().method() === 'POST') {
+            const orderReq = route.request().postDataJSON();
+            const orderRes = {
+                order: { ...orderReq, id: 23 },
+                jwt: 'eyJpYXQ',
+            };
+            await route.fulfill({ json: orderRes });
+        }
     });
 
     // Delete and Create store
