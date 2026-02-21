@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - user-interface-testing
   workflow_dispatch:
 jobs:
   build:
