@@ -10,7 +10,7 @@ export default defineConfig({
     timeout: 5000,
     use: {
         baseURL: 'http://localhost:5173',
-        trace: 'retain-on-failure',
+        trace: 'on-first-retry',
     },
 
     /* Configure projects for major browsers */
