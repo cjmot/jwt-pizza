@@ -72,7 +72,8 @@ async function basicInit(page: Page) {
                 await route.fulfill({ status: 401, json: { error: 'Unauthorized' } });
                 return;
             }
-            loggedInUser = validUsers[req.email];
+            loggedInUser = { ...validUsers[req.email] };
+            delete loggedInUser.password;
             const loginRes = {
                 user: loggedInUser,
                 token: 'abcdef',
@@ -82,16 +83,89 @@ async function basicInit(page: Page) {
             return;
         }
         const newUser = { ...req, id: '15', roles: [{ role: Role.Diner }] };
-        validUsers[req.email] = newUser;
-        delete newUser.password;
-        loggedInUser = newUser;
-        await route.fulfill({ json: { user: newUser, token: 'abcdef' } });
+        validUsers[req.email] = { ...newUser };
+        const userResponse = { ...newUser };
+        delete userResponse.password;
+        loggedInUser = userResponse;
+        await route.fulfill({ json: { user: userResponse, token: 'abcdef' } });
     });
 
     // Return the currently logged in user
     await page.route('*/**/api/user/me', async (route) => {
         expect(route.request().method()).toBe('GET');
         await route.fulfill({ json: loggedInUser });
+    });
+
+    // List users
+    await page.route(/\/api\/user(\?.*)$/, async (route) => {
+        expect(route.request().method()).toBe('GET');
+        const url = new URL(route.request().url());
+        const nameFilter = (url.searchParams.get('name') || '*').replace(/\*/g, '').toLowerCase();
+
+        const users = Object.values(validUsers)
+            .filter((user) => {
+                if (!nameFilter) {
+                    return true;
+                }
+                const userName = (user.name || '').toLowerCase();
+                const userEmail = (user.email || '').toLowerCase();
+                return userName.includes(nameFilter) || userEmail.includes(nameFilter);
+            })
+            .map((user) => {
+                const responseUser = { ...user };
+                delete responseUser.password;
+                return responseUser;
+            });
+
+        await route.fulfill({ json: { users, more: false } });
+    });
+
+    // Update a user
+    await page.route(/\/api\/user\/(\d+)$/, async (route) => {
+        const method = route.request().method();
+        const userId = route.request().url().split('/').pop();
+
+        if (!userId) {
+            await route.fulfill({ status: 400, json: { error: 'missing user id' } });
+            return;
+        }
+
+        const currentEntry = Object.entries(validUsers).find(([, user]) => user.id === userId);
+        if (!currentEntry) {
+            await route.fulfill({ status: 404, json: { error: 'user not found' } });
+            return;
+        }
+
+        if (method === 'DELETE') {
+            const [currentEmail, currentUser] = currentEntry;
+            delete validUsers[currentEmail];
+            if (loggedInUser?.id === currentUser.id) {
+                loggedInUser = undefined;
+            }
+            await route.fulfill({ json: { message: 'user deleted successfully' } });
+            return;
+        }
+
+        expect(method).toBe('PUT');
+        const userReq = route.request().postDataJSON();
+        const [currentEmail, currentUser] = currentEntry;
+        const updatedUser: User = {
+            ...currentUser,
+            ...userReq,
+            id: currentUser.id,
+            roles: userReq.roles || currentUser.roles,
+            password: userReq.password || currentUser.password,
+        };
+
+        if (userReq.email && userReq.email !== currentEmail) {
+            delete validUsers[currentEmail];
+        }
+        validUsers[updatedUser.email || currentEmail] = updatedUser;
+
+        const userResponse = { ...updatedUser };
+        delete userResponse.password;
+        loggedInUser = userResponse;
+        await route.fulfill({ json: { user: userResponse, token: 'abcdef' } });
     });
 
     // A standard menu

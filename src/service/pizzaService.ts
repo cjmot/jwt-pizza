@@ -78,6 +78,11 @@ type FranchiseList = {
     more: boolean;
 };
 
+type UserList = {
+    users: User[];
+    more: boolean;
+};
+
 type Endpoint = {
     requiresAuth: boolean;
     method: string;
@@ -101,6 +106,9 @@ interface PizzaService {
     register(email: string, password: string, role: string): Promise<User>;
     logout(): void;
     getUser(): Promise<User | null>;
+    listUsers(page: number, limit: number, nameFilter: string): Promise<UserList>;
+    updateUser(user: User): Promise<User>;
+    deleteUser(userId: string): Promise<void>;
     getMenu(): Promise<Menu>;
     getOrders(user: User): Promise<OrderHistory>;
     order(order: Order): Promise<OrderResponse>;
@@ -124,6 +132,7 @@ export {
     Order,
     Franchise,
     FranchiseList,
+    UserList,
     Store,
     OrderItem,
     Endpoint,

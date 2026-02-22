@@ -18,6 +18,7 @@ import CreateStore from '../views/createStore';
 import CreateFranchise from '../views/createFranchise';
 import CloseFranchise from '../views/closeFranchise';
 import CloseStore from '../views/closeStore';
+import DeleteUser from '../views/deleteUser';
 import Payment from '../views/payment';
 import NotFound from '../views/notFound';
 import Docs from '../views/docs';
@@ -66,7 +67,7 @@ export default function App() {
         {
             title: 'Diner',
             to: '/diner-dashboard',
-            component: <DinerDashboard user={user} />,
+            component: <DinerDashboard user={user} setUser={setUser} />,
             display: [],
         },
         { title: 'Order', to: '/menu', component: <Menu />, display: ['nav'] },
@@ -108,6 +109,12 @@ export default function App() {
             title: 'Close store',
             to: '/:subPath?/close-store',
             component: <CloseStore />,
+            display: [],
+        },
+        {
+            title: 'Delete user',
+            to: '/:subPath?/delete-user',
+            component: <DeleteUser />,
             display: [],
         },
         { title: 'Payment', to: '/payment', component: <Payment />, display: [] },

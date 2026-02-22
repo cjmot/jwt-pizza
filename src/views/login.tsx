@@ -29,7 +29,12 @@ export default function Login(props: Props) {
             props.setUser(await pizzaService.login(email, password));
             navigateToParent();
         } catch (error) {
-            displayMessage(JSON.stringify(error));
+            console.log(JSON.stringify(error));
+            if (JSON.stringify(error).includes('401')) {
+                displayMessage('Invalid email or password');
+            } else {
+                displayMessage(JSON.stringify(error));
+            }
         }
     }
 
