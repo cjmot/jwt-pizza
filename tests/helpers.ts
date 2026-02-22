@@ -96,6 +96,30 @@ async function basicInit(page: Page) {
         await route.fulfill({ json: loggedInUser });
     });
 
+    // List users
+    await page.route(/\/api\/user(\?.*)$/, async (route) => {
+        expect(route.request().method()).toBe('GET');
+        const url = new URL(route.request().url());
+        const nameFilter = (url.searchParams.get('name') || '*').replaceAll('*', '').toLowerCase();
+
+        const users = Object.values(validUsers)
+            .filter((user) => {
+                if (!nameFilter) {
+                    return true;
+                }
+                const userName = (user.name || '').toLowerCase();
+                const userEmail = (user.email || '').toLowerCase();
+                return userName.includes(nameFilter) || userEmail.includes(nameFilter);
+            })
+            .map((user) => {
+                const responseUser = { ...user };
+                delete responseUser.password;
+                return responseUser;
+            });
+
+        await route.fulfill({ json: { users, more: false } });
+    });
+
     // Update a user
     await page.route(/\/api\/user\/(\d+)$/, async (route) => {
         expect(route.request().method()).toBe('PUT');
