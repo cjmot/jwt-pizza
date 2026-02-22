@@ -100,7 +100,7 @@ async function basicInit(page: Page) {
     await page.route(/\/api\/user(\?.*)$/, async (route) => {
         expect(route.request().method()).toBe('GET');
         const url = new URL(route.request().url());
-        const nameFilter = (url.searchParams.get('name') || '*').replaceAll('*', '').toLowerCase();
+        const nameFilter = (url.searchParams.get('name') || '*').replace(/\*/g, '').toLowerCase();
 
         const users = Object.values(validUsers)
             .filter((user) => {
@@ -122,8 +122,7 @@ async function basicInit(page: Page) {
 
     // Update a user
     await page.route(/\/api\/user\/(\d+)$/, async (route) => {
-        expect(route.request().method()).toBe('PUT');
-        const userReq = route.request().postDataJSON();
+        const method = route.request().method();
         const userId = route.request().url().split('/').pop();
 
         if (!userId) {
@@ -137,6 +136,18 @@ async function basicInit(page: Page) {
             return;
         }
 
+        if (method === 'DELETE') {
+            const [currentEmail, currentUser] = currentEntry;
+            delete validUsers[currentEmail];
+            if (loggedInUser?.id === currentUser.id) {
+                loggedInUser = undefined;
+            }
+            await route.fulfill({ json: { message: 'user deleted successfully' } });
+            return;
+        }
+
+        expect(method).toBe('PUT');
+        const userReq = route.request().postDataJSON();
         const [currentEmail, currentUser] = currentEntry;
         const updatedUser: User = {
             ...currentUser,

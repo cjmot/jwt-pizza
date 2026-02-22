@@ -114,3 +114,43 @@ test('users list has no close actions and list filter resets when switching back
     await expect(page.getByPlaceholder('Filter franchises')).toHaveValue('');
     await expect(page.getByRole('cell', { name: 'LotaPizza' })).toBeVisible();
 });
+
+test('admin can delete a user from users list', async ({ page }) => {
+    await basicInit(page);
+    await loginAsAdminAndOpenDashboard(page);
+
+    await page.getByRole('button', { name: 'Users' }).click();
+    await expect(page.getByRole('cell', { name: 'Pizza Diner' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'd@jwt.com' })).toBeVisible();
+
+    await page
+        .getByRole('row', { name: 'Pizza Diner d@jwt.com Delete' })
+        .getByRole('button', { name: 'Delete' })
+        .click();
+    await expect(page.getByText('Are you sure you want to delete user')).toBeVisible();
+    await expect(page.getByText('Pizza Diner')).toBeVisible();
+    await page.getByRole('button', { name: 'Delete' }).click();
+
+    await page.getByRole('button', { name: 'Users' }).click();
+    await expect(page.getByRole('cell', { name: 'Pizza Diner' })).toHaveCount(0);
+    await expect(page.getByRole('cell', { name: 'd@jwt.com' })).toHaveCount(0);
+    await expect(page.getByRole('cell', { name: 'Pizza Admin' })).toBeVisible();
+});
+
+test('admin can cancel delete user and keep user in list', async ({ page }) => {
+    await basicInit(page);
+    await loginAsAdminAndOpenDashboard(page);
+
+    await page.getByRole('button', { name: 'Users' }).click();
+    await page
+        .getByRole('row', { name: 'Pizza Diner d@jwt.com Delete' })
+        .getByRole('button', { name: 'Delete' })
+        .click();
+
+    await expect(page.getByText('Are you sure you want to delete user')).toBeVisible();
+    await page.getByRole('button', { name: 'Cancel' }).click();
+
+    await page.getByRole('button', { name: 'Users' }).click();
+    await expect(page.getByRole('cell', { name: 'Pizza Diner' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'd@jwt.com' })).toBeVisible();
+});
