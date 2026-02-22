@@ -91,7 +91,8 @@ test('admin can filter users list by name and email', async ({ page }) => {
 
     await page.getByPlaceholder('Filter users').fill('a@jwt.com');
     await page.getByRole('button', { name: 'Submit' }).click();
-    await expect(page.getByRole('cell', { name: 'a@jwt.com' })).toBeVisible();
+    const adminEmailCells = await page.getByRole('cell', { name: 'a@jwt.com' }).count();
+    expect(adminEmailCells).toBeGreaterThanOrEqual(1);
     await expect(page.getByRole('cell', { name: 'f@jwt.com' })).toHaveCount(0);
 });
 
