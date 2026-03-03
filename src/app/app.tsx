@@ -63,14 +63,24 @@ export default function App() {
     }
 
     const navItems = [
-        { title: 'Home', to: '/', component: <Home />, display: [] },
+        { 
+            title: 'Home', 
+            to: '/', 
+            component: <Home />, 
+            display: [] 
+        },
         {
             title: 'Diner',
             to: '/diner-dashboard',
             component: <DinerDashboard user={user} setUser={setUser} />,
             display: [],
         },
-        { title: 'Order', to: '/menu', component: <Menu />, display: ['nav'] },
+        { 
+            title: 'Order',
+            to: '/menu', 
+            component: <Menu />, 
+            display: ['nav'] 
+        },
         {
             title: 'Franchise',
             to: '/franchise-dashboard',
@@ -78,8 +88,17 @@ export default function App() {
             constraints: [isNotAdmin],
             display: ['nav', 'footer'],
         },
-        { title: 'About', to: '/about', component: <About />, display: ['footer'] },
-        { title: 'History', to: '/history', component: <History />, display: ['footer'] },
+        {
+            title: 'About',
+            to: '/about',
+            component: <About />,
+            display: ['footer'] 
+        },
+        {
+            title: 'History', 
+            to: '/history', 
+            component: <History />, display: ['footer'] 
+        },
         {
             title: 'Admin',
             to: '/admin-dashboard',
@@ -117,8 +136,18 @@ export default function App() {
             component: <DeleteUser />,
             display: [],
         },
-        { title: 'Payment', to: '/payment', component: <Payment />, display: [] },
-        { title: 'Delivery', to: '/delivery', component: <Delivery />, display: [] },
+        { 
+            title: 'Payment', 
+            to: '/payment',
+            component: <Payment />,
+            display: [] 
+        },
+        {
+            title: 'Delivery', 
+            to: '/delivery', 
+            component: <Delivery />,
+            display: [] 
+        },
         {
             title: 'Login',
             to: '/:subPath?/login',
@@ -127,7 +156,7 @@ export default function App() {
             display: ['nav'],
         },
         {
-            title: 'Register',
+           title: 'Register',
             to: '/:subPath?/register',
             component: <Register setUser={setUser} />,
             constraints: [loggedOut],
@@ -140,8 +169,18 @@ export default function App() {
             constraints: [loggedIn],
             display: ['nav'],
         },
-        { title: 'Docs', to: '/docs/:docType?', component: <Docs />, display: [] },
-        { title: 'Opps', to: '*', component: <NotFound />, display: [] },
+        {
+            title: 'Docs', 
+            to: '/docs/:docType?',
+            component: <Docs />,
+            display: [] 
+        },
+        {
+            title: 'Opps', 
+            to: '*', 
+            component: <NotFound />, 
+            display: [] 
+        },
     ];
 
     return (
