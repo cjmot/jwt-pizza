@@ -49,10 +49,10 @@
 | Date           | April 9, 2026                                           |
 | Target         | pizza.owenlarson.click                                  |
 | Classification | Security Misconfiguration                               |
-| Severity       | 1                                                       |
+| Severity       | 0                                                       |
 | Description    | Failed to get user list as an unauthorized user         |
 | Images         | ![User List Failure](peerFailedToGetUserList.png) <br/> |
-| Corrections    | Add admin role check before deleting franchises         |
+| Corrections    | N/A                                                     |
 
 | Test 3         | Result                                                    |
 |----------------|-----------------------------------------------------------|
